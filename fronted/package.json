@@ -1,0 +1,22 @@
+{
+  "name": "xmall-frontend",
+  "version": "1.0.0",
+  "description": "XMall 前端项目",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["vue", "vite", "xmall"],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "vue": "^3.5.25"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.2",
+    "vite": "^7.2.4"
+  }
+}
