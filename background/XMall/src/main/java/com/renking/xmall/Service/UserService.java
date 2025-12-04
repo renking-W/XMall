@@ -1,8 +1,7 @@
 package com.renking.xmall.Service;
 
-import com.renking.xmall.Entity.Response.LoginResponse;
-import com.renking.xmall.Entity.User;
+import com.renking.xmall.Entity.Dto.UserDto;
 
 public interface UserService {
-    LoginResponse login(String phone, String password);
+    UserDto login(String phone, String password);
 }

@@ -1,30 +1,68 @@
 package com.renking.xmall.Utils;
 
+import com.renking.xmall.Common.exception.ServiceException;
+import com.renking.xmall.Config.StatusCode;
+import com.renking.xmall.Config.TokenConfig;
 import com.renking.xmall.Entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class TokenUtil {
 
-    // 生成token
-    public String getToken(User user) {
+    private static Key getSigningKey() {
+        return new SecretKeySpec(TokenConfig.TOKEN_KEY.getBytes(), SignatureAlgorithm.HS256.getJcaName());
+    }
+
+    /**
+     * 生成token
+     * @param user
+     * @return  token
+     */
+    public static String getToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("phone", user.getPhone());
         claims.put("password", user.getPassword());
         return Jwts.builder()
                 .setSubject(user.getPhone())
-                .setClaims( claims)
+                .setClaims(claims)
+                .setExpiration(new Date(System.currentTimeMillis()+TokenConfig.TOKEN_EXPIRE_TIME))
+                .signWith(getSigningKey())
                 .compact();
     }
 
-    // 解析 token
-    public User parseToken(String token) {
-        return null;
+    /**
+     * 解析token
+     * @param token
+     * @return  claims
+     */
+    public static Claims parseToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            throw new ServiceException("Token 无效或已经过期", StatusCode.TOKEN_INVALID);
+        }
     }
+
+    public static Boolean isTokenExpired(String token) {
+        try {
+            Claims claims = parseToken(token);
+            Date expiration = claims.getExpiration();
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
 }

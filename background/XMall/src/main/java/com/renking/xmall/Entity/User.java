@@ -10,4 +10,6 @@ public class User {
     private String phone;
     //密码
     private String password;
+    // token
+    private String token;
 }

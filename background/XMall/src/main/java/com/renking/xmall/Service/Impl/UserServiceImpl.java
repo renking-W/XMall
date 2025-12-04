@@ -1,11 +1,14 @@
 package com.renking.xmall.Service.Impl;
 
-import com.renking.xmall.Entity.Response.LoginResponse;
+import com.renking.xmall.Common.exception.ServiceException;
+import com.renking.xmall.Config.StatusCode;
+import com.renking.xmall.Entity.Dto.UserDto;
 import com.renking.xmall.Entity.User;
 import com.renking.xmall.Mapper.UserMapper;
 import com.renking.xmall.Service.UserService;
 import com.renking.xmall.Utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,13 +16,16 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
-    private final TokenUtil tokenUtil;
     @Override
-    public LoginResponse login(String phone, String password) {
+    public UserDto login(String phone, String password) {
         User user = userMapper.selectByPhoneAndPassword(phone, password);
-        if(user==null) {
-            return LoginResponse.failure("用户不存在或密码错误！");
-        }
-        return LoginResponse.success("登录成功！",tokenUtil.getToken(user));
+        //用户不存在抛出异常
+        if(user==null) throw new ServiceException("用户不存在或密码错误！", StatusCode.USER_NOT_EXIST);
+        UserDto userDto = new UserDto();
+        BeanUtils.copyProperties(user,userDto);
+        //生成token
+        String token = TokenUtil.getToken(user);
+        userDto.setToken(token);
+        return userDto;
     }
 }

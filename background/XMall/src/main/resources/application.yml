@@ -1,3 +1,11 @@
 spring:
   application:
     name: XMall
+  datasource:
+    url: jdbc:mysql://localhost:3306/xmall?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123123123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+mybatis:
+  type-aliases-package: com.renking.xmall.Entity
