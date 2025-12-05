@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.renking.xmall.Mapper.UserMapper">
+
+    <select id="selectByPhoneAndPassword" resultType="com.renking.xmall.Entity.User">
+        select id, user_name, phone, password from user where phone=#{phone} and password=#{password}
+    </select>
+    <select id="selectByUserName" resultType="com.renking.xmall.Entity.Dto.UserDto">
+        select id, user_name, phone, password from user where user_name= #{userName}
+    </select>
+
+    <insert id="insertUserIfNotExist" parameterType="com.renking.xmall.Entity.Dto.UserDto">
+        insert into user (user_name,phone) values (#{userName},#{phone})
+        on duplicate key update phone=values(phone)
+    </insert>
+
+</mapper>

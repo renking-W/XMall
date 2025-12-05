@@ -9,11 +9,11 @@ public class Result<T> {
     private String message;
     private Integer code;
 
-    public static <T> Result<T> success(T data) {
+    public static <T> Result<T> success(T data,String  message) {
         Result<T> result = new Result<>();
         result.setData(data);
         result.setCode(StatusCode.SUCCESS);
-        result.setMessage("操作成功");
+        result.setMessage(message);
         return result;
     }
 
@@ -21,6 +21,14 @@ public class Result<T> {
         Result<T> result = new Result<>();
         result.setCode(code);
         result.setMessage(message);
+        return result;
+    }
+
+    public static <T> Result<T> success(T data) {
+        Result<T> result = new Result<>();
+        result.setData(data);
+        result.setCode(StatusCode.SUCCESS);
+        result.setMessage("操作成功");
         return result;
     }
 }

@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 @Slf4j
 @RestControllerAdvice  // ✅ 添加这个注解
 public class GlobalExceptionHandler {
@@ -13,7 +16,7 @@ public class GlobalExceptionHandler {
      * 只要代码里 throw new ServiceException("密码错误")，就会进到这里
      */
     @ExceptionHandler(ServiceException.class)
-    public Result<?> handleServiceException(ServiceException e) {
+    public Result<?> handleServiceException(ServiceException e, HttpServletRequest request, HttpServletResponse response) {
         // 记录一个简单的警告日志即可，因为这是预期的业务错误
         log.warn("业务异常: {}", e.getMessage());
         return Result.failure(e.getCode(), e.getMessage());

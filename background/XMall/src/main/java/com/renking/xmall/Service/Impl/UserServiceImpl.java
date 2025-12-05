@@ -1,6 +1,9 @@
 package com.renking.xmall.Service.Impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.renking.xmall.Common.exception.ServiceException;
+import com.renking.xmall.Config.RedisConfig;
 import com.renking.xmall.Config.StatusCode;
 import com.renking.xmall.Entity.Dto.UserDto;
 import com.renking.xmall.Entity.User;
@@ -8,14 +11,23 @@ import com.renking.xmall.Mapper.UserMapper;
 import com.renking.xmall.Service.UserService;
 import com.renking.xmall.Utils.TokenUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
+
+    private final StringRedisTemplate stringRedisTemplate;
     private final UserMapper userMapper;
+    private final ObjectMapper objectMapper;
     @Override
     public UserDto login(String phone, String password) {
         User user = userMapper.selectByPhoneAndPassword(phone, password);
@@ -25,7 +37,70 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(user,userDto);
         //生成token
         String token = TokenUtil.getToken(user);
+        //存入redis 过期时间8小时
+        stringRedisTemplate.opsForValue().set(RedisConfig.USER_TOKEN_KEY+":"+phone, token,RedisConfig.USER_TOKEN_EXPIRE_TIME, TimeUnit.SECONDS);
         userDto.setToken(token);
+        log.info("{}:token生成成功,token:{}",phone,token);
+        return userDto;
+    }
+
+    @Override
+    public String getCode(String phone) {
+        //生成6位随机数
+        String code = String.valueOf(100000 + new Random().nextInt(900000));
+        //存入redis
+        stringRedisTemplate.opsForValue().set(RedisConfig.USER_CODE_KEY+":"+phone, code,RedisConfig.USER_CODE_EXPIRE_TIME,TimeUnit.SECONDS);
+        log.info("{}:验证码生成成功,验证码:{}",phone,code);
+        return code;
+    }
+
+    @Override
+    public UserDto register(UserDto userDto) {
+        //获取验证码
+        String code = stringRedisTemplate.opsForValue().get(RedisConfig.USER_CODE_KEY + ":" + userDto.getPhone());
+        log.info("{}:验证码:{}",userDto.getPhone(),code);
+        if(code==null||!code.equals(userDto.getCode())) throw new ServiceException("无效的验证码", StatusCode.CODE_UNVALID);
+        //插入数据
+        userDto.setUserName(userDto.getPhone());
+        try {
+            userMapper.insertUserIfNotExist(userDto);
+        } catch (Exception e) {
+            throw new ServiceException("插入数据失败！");
+        }
+        //生成token
+        User user = new User();
+        BeanUtils.copyProperties(userDto,user);
+        String token = TokenUtil.getToken(user);
+        userDto.setToken(token);
+        //存入redis
+        stringRedisTemplate.opsForValue().set(RedisConfig.USER_TOKEN_KEY+":"+userDto.getPhone(), token,RedisConfig.USER_TOKEN_EXPIRE_TIME,TimeUnit.SECONDS);
+        log.info("{}:注册成功,token:{}",userDto.getPhone(),token);
+        return userDto;
+    }
+
+    @Override
+    public UserDto getInfo(String userName) {
+        UserDto userDto = new UserDto();
+        String tar = stringRedisTemplate.opsForValue().get(RedisConfig.USER_TOKEN_KEY + ":" + userName);
+        //未命中查询数据库
+        if(tar==null){
+            userDto = userMapper.selectByUserName(userName);
+            //存入缓存
+            try {
+                stringRedisTemplate.opsForValue().set(RedisConfig.USER_TOKEN_KEY+":"+userName, objectMapper.writeValueAsString(userDto),RedisConfig.USER_TOKEN_EXPIRE_TIME,TimeUnit.SECONDS);
+            } catch (JsonProcessingException e) {
+                log.error("{}:数据解析失败!",userName,e);
+                throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);
+            }
+        }
+        //查询缓存
+        try {
+            userDto = objectMapper.readValue(tar, UserDto.class);
+        } catch (JsonProcessingException e) {
+            log.error("{}:数据解析失败!",userName,e);
+            throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);
+        }
+        //命中直接返回
         return userDto;
     }
 }

@@ -16,7 +16,7 @@ public class InterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/login/**", "/register/**", "/search/**");
+                .excludePathPatterns("/user/login/**", "/search/**","/user/code/**","/error/**");
         WebMvcConfigurer.super.addInterceptors(registry);
     }
 }
