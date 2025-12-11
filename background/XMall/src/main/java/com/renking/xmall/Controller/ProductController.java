@@ -20,6 +20,7 @@ public class ProductController {
     /**
      * 获取商品列表
      * 对每种筛选结果都做了缓存
+     * 前端传参： page, pageSize, categoryId, maxPrice, minPrice
      * @return
      */
     @GetMapping("/list")
@@ -34,6 +35,7 @@ public class ProductController {
     /**
      * 搜索商品
      * 这里不做缓存
+     * 前端传参： keyword, page, pageSize
      */
     @GetMapping("/search")
     public Result<List<ProductDto>> searchProduct(@RequestParam(value = "keyword", required = true) String keyword,
@@ -46,6 +48,7 @@ public class ProductController {
 
     /**
      * 获取商品信息
+     * 前端传参： id
      * @param id
      * @return
      */
@@ -58,6 +61,7 @@ public class ProductController {
 
     /**
      * 修改商品信息
+     * 前端传参： id, product{ name,categoryId,price,stock,coverImg,status }
      * @param id
      * @param product
      * @return
@@ -72,6 +76,7 @@ public class ProductController {
 
     /**
      * 添加商品
+     * 前端传参： product{ name,categoryId,price,stock,coverImg,status }
      * @param product
      * @return
      */

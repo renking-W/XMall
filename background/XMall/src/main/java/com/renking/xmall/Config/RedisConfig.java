@@ -20,11 +20,15 @@ public class RedisConfig {
     //商品列表 key
     public static final String PRODUCT_List_KEY = "product:list";
     //商品列表过期时间
-    public static final long PRODUCT_INFO_EXPIRE_TIME = 60 * 60 * 8L;
+    public static final long PRODUCT_INFO_EXPIRE_TIME = 60 * 60 * 2L;
     //商品信息 key
     public static final String PRODUCT_INFO_KEY = "product:info";
     //空值过期时间
     public static final long NULL_EXPIRE_TIME = 60*5L;
     //订单信息 key
     public static final String ORDER_INFO_KEY = "order:info";
+    //购物车信息 key
+    public static final String CART_INFO_KEY = "cart:info";
+    //购物车过期时间
+    public static final long CART_INFO_EXPIRE_TIME = 60 * 60 * 2L;
 }

@@ -46,3 +46,9 @@ mybatis:
   mapper-locations: classpath:Mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+aliyun:
+  oss:
+    endpoint: oss-cn-shanghai.aliyuncs.com
+    accessKeyId:
+    accessKeySecret:
+    bucketName: renking-xmall

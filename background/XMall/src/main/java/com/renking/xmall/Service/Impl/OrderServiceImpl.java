@@ -67,9 +67,11 @@ public class OrderServiceImpl implements OrderService {
                 throw new ServiceException("商品库存不足！", StatusCode.PRODUCT_STOCK_NOT_ENOUGH);
             }
         });
+        //TODO 尝试接入第三方支付过程，再开一个PayService
         //生成订单
-        orderDto.setStatus(0);      //默认为未支付
+        orderDto.setStatus(1);      //默认为待发货
         orderDto.setPaymentMethod(3);   //默认余额支付
+        orderDto.setPaidAt(LocalDateTime.now());    //支付时间为当前时间
         Order order = new Order();
         BeanUtils.copyProperties(orderDto, order);
         // TODO 在这边添加上分布式事务，确保一致性
@@ -80,6 +82,8 @@ public class OrderServiceImpl implements OrderService {
             rabbitTemplate.convertAndSend(RabbitConfig.USER_EXCHANGE,RabbitConfig.USER_MONEY_REDUCE_ROUTING_KEY, orderDto);
             //保存订单
             rabbitTemplate.convertAndSend(RabbitConfig.ORDER_ITEM_SAVE_EXCHANGE,RabbitConfig.ORDER_ITEM_SAVE_ROUTING_KEY, orderDto);
+            //删除购物车
+            rabbitTemplate.convertAndSend(RabbitConfig.CART_EXCHANGE,RabbitConfig.CART_DELETE_ROUTING_KEY, orderDto);
         } catch (AmqpException e) {
             log.error("消息发送失败！",e);
             throw new ServiceException("消息消费失败！", StatusCode.MQ_CONSUMER_ERROR);

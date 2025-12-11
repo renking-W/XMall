@@ -1,5 +1,6 @@
 package com.renking.xmall.Controller;
 
+import com.aliyun.oss.OSSClient;
 import com.renking.xmall.Config.StatusCode;
 import com.renking.xmall.Entity.Dto.OrderDto;
 import com.renking.xmall.Entity.Order;
@@ -17,9 +18,10 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-
     /**
      * 购买商品
+     * 前端传参: userId，totalPrice，addressId，remark
+     *          items：{ productId，productName，productPrice，quantity，totalPrice }
      * @param orderDto
      * @return
      */
@@ -32,6 +34,7 @@ public class OrderController {
 
     /**
      * 查询订单列表
+     * 前端传参： userId，page，pageSize，status，orderNumber，startTime，endTime
      * @param userId
      * @return
      */
@@ -50,6 +53,7 @@ public class OrderController {
 
     /**
      * 查询订单详情
+     * 前端传参： id
      * @param id
      * @return
      */

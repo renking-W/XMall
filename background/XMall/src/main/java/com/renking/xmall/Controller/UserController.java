@@ -21,6 +21,7 @@ public class UserController {
 
     /**
      * 密码登录，需要已有账号
+     * 前端传参： phone, password
      * @param user
      * @return
      */
@@ -33,6 +34,7 @@ public class UserController {
 
     /**
      * 获取验证码
+     * 前端传参： phone
      * @param phone
      * @return
      */
@@ -44,6 +46,7 @@ public class UserController {
 
     /**
      * 验证码登录，自动创建新账号
+     * 前端传参： phone, code
      * @param user
      * @return
      */
@@ -55,6 +58,7 @@ public class UserController {
 
     /**
      * 获取用户信息
+     * 前端传参: id,userName
      * @param user
      * @return
      */
@@ -66,6 +70,7 @@ public class UserController {
 
     /**
      * 修改用户信息
+     * 前端传参： userName,phone,password
      * @param user
      * @return
      */
@@ -78,6 +83,7 @@ public class UserController {
 
     /**
      *  充值余额
+     *  前端传参： id,mon(直接传递不需要包装对象)
      */
     @PutMapping("/recharge/{id}")
     public Result<Boolean> recharge(@PathVariable("id") Integer id ,@RequestBody BigDecimal mon) {
@@ -85,18 +91,4 @@ public class UserController {
         if(flag)  return Result.success(flag,"充值成功");
         else return Result.failure(StatusCode.USER_NOT_EXIST, "充值失败");
     }
-
-    /**
-     *  支付订单
-     * @param id
-     * @param orderDto
-     * @return
-     */
-
-//    @PutMapping("/pay/{id}")
-//    public Result<Boolean> payOrder(@PathVariable("id") Integer id ,@RequestBody OrderDto orderDto) {
-//        Boolean flag = userService.payOrder(id,orderDto);
-//        if(flag)  return Result.success(flag,"支付成功");
-//        else return Result.failure(StatusCode.USER_NOT_EXIST, "支付失败");
-//    }
 }

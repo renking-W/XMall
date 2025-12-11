@@ -89,7 +89,7 @@ public class ProductServiceImpl implements ProductService {
                 })
                 .collect(Collectors.toList());
         try {
-            if(!products.isEmpty()) stringRedisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(products));
+            if(!products.isEmpty()) stringRedisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(products),RedisConfig.PRODUCT_INFO_EXPIRE_TIME,TimeUnit.SECONDS);
             else stringRedisTemplate.opsForValue().set(cacheKey,"null",RedisConfig.NULL_EXPIRE_TIME, TimeUnit.SECONDS);
         } catch (JsonProcessingException e) {
             log.error("缓存写入失败！",e);
@@ -104,6 +104,7 @@ public class ProductServiceImpl implements ProductService {
         String cacheKey = RedisConfig.PRODUCT_INFO_KEY+":"+id;
         String jsonStr = stringRedisTemplate.opsForValue().get(cacheKey);
         log.info("开始查询缓存，缓存key为：{},查询结果{}",cacheKey,jsonStr);
+        //命中直接返回
         if(jsonStr!=null && !jsonStr.equals("null") ){
             try {
                 ProductDto productDto = new ProductDto();
@@ -122,7 +123,8 @@ public class ProductServiceImpl implements ProductService {
         ProductDto productDto = new ProductDto();
         BeanUtils.copyProperties(product, productDto);
         try {
-            stringRedisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(product));
+            //缓存数据
+            stringRedisTemplate.opsForValue().set(cacheKey,objectMapper.writeValueAsString(product),RedisConfig.PRODUCT_INFO_EXPIRE_TIME,TimeUnit.SECONDS);
         } catch (JsonProcessingException e) {
             log.error("数据解析失败！",e);
             throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);

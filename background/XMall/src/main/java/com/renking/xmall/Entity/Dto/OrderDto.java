@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -22,7 +23,7 @@ public class OrderDto implements Serializable {
     private Integer paymentMethod;    // 支付方式
     private Integer addressId;    // 地址id
     private String remark;      // 备注
-    private String paidAt;  // 支付时间
+    private LocalDateTime paidAt;  // 支付时间
 
     List<Items> items;      // 商品列表
 }

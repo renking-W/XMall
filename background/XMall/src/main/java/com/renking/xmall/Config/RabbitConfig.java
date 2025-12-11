@@ -36,6 +36,19 @@ public class RabbitConfig {
     public static final String ORDER_ITEM_SAVE_ROUTING_KEY = "order.item.save";
     //保存订单物品队列
     public static final String ORDER_ITEM_SAVE_QUEUE = "order_item_save_queue";
+    //购物车交换机
+    public static final String CART_EXCHANGE = "cart_exchange";
+    //更新购物车队列
+    public static final String CART_DELETE_QUEUE = "cart_queue";
+    //更新购物车绑定key
+    public static final String CART_DELETE_ROUTING_KEY = "cart.delete";
+
+
+    //更新购物车队列
+    @Bean
+    public Queue cartDeleteQueue() {
+        return new Queue(CART_DELETE_QUEUE, true);
+    }
 
     //订单队列
     @Bean
@@ -61,6 +74,12 @@ public class RabbitConfig {
         return new Queue(USER_REDUCE_QUEUE, true);
     }
 
+    //购物车交换机
+    @Bean
+    public TopicExchange cartExchange() {
+        return new TopicExchange(CART_EXCHANGE);
+    }
+
     //订单交换机
     @Bean
     public TopicExchange orderExchange() {
@@ -83,6 +102,13 @@ public class RabbitConfig {
     @Bean
     public TopicExchange userExchange() {
         return new TopicExchange(USER_EXCHANGE);
+    }
+
+    //更新购物车绑定
+    @Bean
+    public Binding cartDeleteBinding() {
+        return BindingBuilder.bind(cartDeleteQueue())
+                .to(cartExchange()).with(CART_DELETE_ROUTING_KEY);
     }
 
     //订单生成绑定

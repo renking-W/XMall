@@ -38,4 +38,14 @@ public class StatusCode {
     public static final Integer USER_REDUCE_MONEY_ERROR = 20512;
     //数据查询失败
     public static final Integer DATA_QUERY_ERROR = 50004;
+    //文件上传失败
+    public static final Integer FILE_UPLOAD_ERROR = 5005;
+    //文件为空
+    public static final Integer FILE_EMPTY_ERROR = 5006;
+    //文件大小超出限制
+    public static final Integer FILE_SIZE_ERROR = 5007;
+    //购物车添加失败
+    public static final Integer CART_ADD_ERROR = 20513;
+    //购物车删除失败
+    public static final Integer CART_DELETE_ERROR = 20514;
 }

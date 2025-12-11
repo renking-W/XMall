@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.renking.xmall.Mapper.CartMapper">
+    <insert id="insertCart">
+        insert into cart(user_id, product_id, quantity) values(#{userId}, #{productId}, #{quantity})
+    </insert>
+
+    <delete id="deleteCarts">
+        delete from cart where user_id = #{userId} and product_id in
+        <foreach item="item" collection="cartList" separator="," open="(" close=")">
+            #{item.productId}
+        </foreach>
+    </delete>
+
+
+    <select id="selectCartsByUserId" resultType="com.renking.xmall.Entity.Cart">
+        select id, user_id, product_id, quantity from cart where user_id = #{userId}
+    </select>
+</mapper>
