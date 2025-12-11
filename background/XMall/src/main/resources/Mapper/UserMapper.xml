@@ -3,15 +3,31 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.renking.xmall.Mapper.UserMapper">
+    <update id="updateUserInfoAll">
+        update user set user_name=#{userName},phone=#{phone},password=#{password},avatar= #{avatar},gender= #{gender} where id=#{id}
+    </update>
+
+    <update id="updateMoneyByPhone">
+        update user set money=money+#{mon} where phone=#{phone}
+    </update>
+
+    <update id="addMoneyById">
+        update user set money=money+#{mon} where id=#{id}
+    </update>
+
+    <update id="reduceMoneyById">
+        update user set money=money-#{mon} where id= #{id}
+    </update>
 
     <select id="selectByPhoneAndPassword" resultType="com.renking.xmall.Entity.User">
-        select id, user_name, phone, password from user where phone=#{phone} and password=#{password}
-    </select>
-    <select id="selectByUserName" resultType="com.renking.xmall.Entity.Dto.UserDto">
-        select id, user_name, phone, password from user where user_name= #{userName}
+        select id, user_name, phone, password, avatar, gender, created_at, updated_at,money from user where phone=#{phone} and password=#{password}
     </select>
 
-    <insert id="insertUserIfNotExist" parameterType="com.renking.xmall.Entity.Dto.UserDto">
+    <select id="selectByUserName" resultType="com.renking.xmall.Entity.User">
+        select id, user_name, phone, password, avatar, gender, created_at, updated_at,money from user where user_name= #{userName}
+    </select>
+
+    <insert id="insertUserIfNotExist" parameterType="com.renking.xmall.Entity.User">
         insert into user (user_name,phone) values (#{userName},#{phone})
         on duplicate key update phone=values(phone)
     </insert>

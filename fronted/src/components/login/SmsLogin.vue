@@ -1,7 +1,9 @@
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { getVerificationCode, loginWithCode } from '../../services/api'
 
-// 定义事件发射
+const router = useRouter()
 const emit = defineEmits(['loginSuccess'])
 
 // 表单数据
@@ -22,6 +24,9 @@ const smsButton = reactive({
   disabled: false,
   countdown: 60
 })
+
+// 加载状态
+const loading = ref(false)
 
 // 表单验证
 const validateForm = () => {
@@ -53,7 +58,7 @@ const validateForm = () => {
 }
 
 // 获取验证码
-const getSmsCode = () => {
+const getSmsCode = async () => {
   // 验证手机号
   if (!form.phone) {
     errors.phone = '请输入手机号'
@@ -67,46 +72,77 @@ const getSmsCode = () => {
   
   errors.phone = ''
   
-  // 模拟发送验证码
-  console.log('发送验证码到:', form.phone)
-  
-  // 启动倒计时
-  smsButton.disabled = true
-  smsButton.countdown = 60
-  smsButton.text = `${smsButton.countdown}秒后重新获取`
-  
-  const timer = setInterval(() => {
-    smsButton.countdown--
-    smsButton.text = `${smsButton.countdown}秒后重新获取`
+  try {
+    smsButton.disabled = true
+    const response = await getVerificationCode(form.phone)
     
-    if (smsButton.countdown <= 0) {
-      clearInterval(timer)
+    if (response.code === 20000) {
+      // 验证码发送成功，启动倒计时
+      smsButton.countdown = 60
+      smsButton.text = `${smsButton.countdown}秒后重新获取`
+      
+      const timer = setInterval(() => {
+        smsButton.countdown--
+        smsButton.text = `${smsButton.countdown}秒后重新获取`
+        
+        if (smsButton.countdown <= 0) {
+          clearInterval(timer)
+          smsButton.disabled = false
+          smsButton.text = '获取验证码'
+        }
+      }, 1000)
+      
+      // 开发环境：提示验证码
+      console.log('验证码：' + response.message)
+    } else {
       smsButton.disabled = false
-      smsButton.text = '获取验证码'
+      errors.phone = response.message || '获取验证码失败'
     }
-  }, 1000)
+  } catch (error) {
+    console.error('获取验证码失败:', error)
+    smsButton.disabled = false
+    errors.phone = '获取验证码失败，请检查网络连接'
+  }
 }
 
 // 登录处理
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!validateForm()) {
     return
   }
   
-  // 模拟登录请求
-  console.log('短信验证码登录:', form)
-  
-  // 模拟后端响应
-  // 这里模拟两种情况：
-  // 1. 首次登录用户
-  // 2. 已有账户用户
-  const isFirstLogin = Math.random() > 0.5 // 随机模拟是否首次登录
-  
-  // 发射登录成功事件
-  emit('loginSuccess', {
-    phone: form.phone,
-    isFirstLogin: isFirstLogin
-  })
+  try {
+    loading.value = true
+    const response = await loginWithCode(form.phone, form.smsCode)
+    
+    if (response.code === 20000) {
+      // 保存登录信息到本地存储
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('userName', response.data.userName)
+      localStorage.setItem('phone', response.data.phone)
+      localStorage.setItem('userId', response.data.id)
+      // 短信验证码登录是新用户登录（没有密码）
+      localStorage.setItem('isNewUser', 'true')
+      
+      // 发射登录成功事件
+      emit('loginSuccess', {
+        phone: form.phone,
+        isFirstLogin: false
+      })
+      
+      // 跳转到用户详情页
+      setTimeout(() => {
+        router.push('/user-detail')
+      }, 500)
+    } else {
+      errors.smsCode = response.message || '登录失败'
+    }
+  } catch (error) {
+    console.error('登录失败:', error)
+    errors.smsCode = '登录失败，请检查验证码是否正确'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -143,8 +179,8 @@ const handleLogin = () => {
       <div v-if="errors.smsCode" class="error-message">{{ errors.smsCode }}</div>
     </div>
     
-    <button class="login-button" @click="handleLogin">
-      登录
+    <button class="login-button" @click="handleLogin" :disabled="loading">
+      {{ loading ? '登录中...' : '登录' }}
     </button>
   </div>
 </template>

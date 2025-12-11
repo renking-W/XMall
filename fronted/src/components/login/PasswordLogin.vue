@@ -1,7 +1,9 @@
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { loginWithPassword } from '../../services/api'
 
-// 定义事件发射
+const router = useRouter()
 const emit = defineEmits(['loginSuccess'])
 
 // 表单数据
@@ -15,6 +17,9 @@ const errors = reactive({
   phone: '',
   password: ''
 })
+
+// 加载状态
+const loading = ref(false)
 
 // 表单验证
 const validateForm = () => {
@@ -46,26 +51,43 @@ const validateForm = () => {
 }
 
 // 登录处理
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!validateForm()) {
     return
   }
   
-  // 模拟登录请求
-  console.log('账号密码登录:', form)
-  
-  // 模拟后端响应
-  // 这里模拟两种情况：
-  // 1. 首次登录用户（没有设置密码）
-  // 2. 已有账户用户
-  // 对于账号密码登录，我们假设用户已经设置过密码
-  const isFirstLogin = false
-  
-  // 发射登录成功事件
-  emit('loginSuccess', {
-    phone: form.phone,
-    isFirstLogin: isFirstLogin
-  })
+  try {
+    loading.value = true
+    const response = await loginWithPassword(form.phone, form.password)
+    
+    if (response.code === 20000) {
+      // 保存登录信息到本地存储
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('userName', response.data.userName)
+      localStorage.setItem('phone', response.data.phone)
+      localStorage.setItem('userId', response.data.id)
+      // 密码登录的用户已经有密码
+      localStorage.setItem('isNewUser', 'false')
+      
+      // 发射登录成功事件
+      emit('loginSuccess', {
+        phone: form.phone,
+        isFirstLogin: false
+      })
+      
+      // 跳转到用户详情页
+      setTimeout(() => {
+        router.push('/user-detail')
+      }, 500)
+    } else {
+      errors.phone = response.message || '登录失败'
+    }
+  } catch (error) {
+    console.error('登录失败:', error)
+    errors.phone = '登录失败，请检查网络连接或账号密码是否正确'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -93,8 +115,8 @@ const handleLogin = () => {
       <div v-if="errors.password" class="error-message">{{ errors.password }}</div>
     </div>
     
-    <button class="login-button" @click="handleLogin">
-      登录
+    <button class="login-button" @click="handleLogin" :disabled="loading">
+      {{ loading ? '登录中...' : '登录' }}
     </button>
     
     <div class="login-footer">

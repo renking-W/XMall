@@ -16,6 +16,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -63,8 +64,11 @@ public class UserServiceImpl implements UserService {
         //插入数据
         userDto.setUserName(userDto.getPhone());
         try {
-            userMapper.insertUserIfNotExist(userDto);
+            User user = new User();
+            BeanUtils.copyProperties(userDto,user);
+            userMapper.insertUserIfNotExist(user);
         } catch (Exception e) {
+            log.info("{}:插入数据失败!",userDto.getUserName(),e);
             throw new ServiceException("插入数据失败！");
         }
         //生成token
@@ -79,28 +83,74 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getInfo(String userName) {
+    public UserDto getInfo(UserDto userInfo) {
         UserDto userDto = new UserDto();
-        String tar = stringRedisTemplate.opsForValue().get(RedisConfig.USER_TOKEN_KEY + ":" + userName);
+        String tar = stringRedisTemplate.opsForValue().get(RedisConfig.USER_INFO_KEY + ":" + userInfo.getId());
         //未命中查询数据库
-        if(tar==null){
-            userDto = userMapper.selectByUserName(userName);
+        if(tar== null){
+            User user = userMapper.selectById(userInfo.getId());
+            BeanUtils.copyProperties(user,userDto);
             //存入缓存
             try {
-                stringRedisTemplate.opsForValue().set(RedisConfig.USER_TOKEN_KEY+":"+userName, objectMapper.writeValueAsString(userDto),RedisConfig.USER_TOKEN_EXPIRE_TIME,TimeUnit.SECONDS);
+
+                stringRedisTemplate.opsForValue().set(RedisConfig.USER_INFO_KEY+":"+user.getId(), objectMapper.writeValueAsString(userDto),RedisConfig.USER_INFO_EXPIRE_TIME,TimeUnit.SECONDS);
             } catch (JsonProcessingException e) {
-                log.error("{}:数据解析失败!",userName,e);
+                log.error("{}:数据解析失败!",userInfo.getPhone(),e);
                 throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);
             }
         }
-        //查询缓存
-        try {
-            userDto = objectMapper.readValue(tar, UserDto.class);
-        } catch (JsonProcessingException e) {
-            log.error("{}:数据解析失败!",userName,e);
-            throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);
+        else{
+            //查询缓存
+            try {
+                userDto = objectMapper.readValue(tar, UserDto.class);
+            } catch (JsonProcessingException e) {
+                log.error("{}:数据解析失败!",userInfo.getUserName(),e);
+                throw new ServiceException("数据解析失败！", StatusCode.DATA_PARSE_ERROR);
+            }
         }
         //命中直接返回
         return userDto;
+    }
+
+
+    @Override
+    public Boolean updateUserInfo(UserDto userDto) {
+        UserDto info = getInfo(userDto);
+        //验证新旧密码是否相同
+        String oldPassword = info.getPassword();
+        userDto.setId(info.getId());
+        if( oldPassword!=null && !oldPassword.equals(userDto.getOldPassword())){
+            throw new ServiceException("密码不一致或密码错误！", StatusCode.USER_PASSWORD_ERROR);
+        }else{
+            try {
+                User user = new User();
+                BeanUtils.copyProperties(userDto,user);
+                userMapper.updateUserInfoAll(user);
+                //更新缓存
+                stringRedisTemplate.delete(RedisConfig.USER_INFO_KEY+":"+userDto.getId());
+            } catch (Exception e) {
+                log.error("{}:更新数据失败!",userDto.getUserName(),e);
+                throw new ServiceException("更新数据失败！");
+            }
+        }
+        return Boolean.TRUE;
+    }
+
+    @Override
+    public Boolean recharge(Integer id, BigDecimal mon) {
+        //获取缓存key
+        String key = RedisConfig.USER_INFO_KEY + ":" + id;
+        String jsonStr = stringRedisTemplate.opsForValue().get(key);
+        Boolean flag = userMapper.addMoneyById(id,mon);
+        if(flag.equals(Boolean.FALSE)) throw new ServiceException("充值失败！", StatusCode.USER_RECHARGE_ERROR);
+        if(jsonStr!=null && !jsonStr.equals("null")){
+            stringRedisTemplate.delete(key);
+        }
+        return flag;
+    }
+
+    @Override
+    public void reduceMoney(Integer userId, BigDecimal tar) {
+        userMapper.reduceMoneyById(userId,tar);
     }
 }

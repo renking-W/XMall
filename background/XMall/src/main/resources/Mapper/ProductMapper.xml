@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.renking.xmall.Mapper.ProductMapper">
+    <insert id="insertProduct" parameterType="com.renking.xmall.Entity.Product">
+        insert into product(name, description, category_id, price, stock, cover_img, status)
+        values(#{name}, #{description}, #{categoryId}, #{price}, #{stock}, #{coverImg}, #{status})
+    </insert>
+    <update id="updateProductById" parameterType="com.renking.xmall.Entity.Product">
+        update product set name = #{name}, description = #{description}, category_id = #{categoryId}, price = #{price}, stock = #{stock}, cover_img = #{coverImg}, status = #{status}, sales_count = #{salesCount}
+        where id = #{id}
+    </update>
+    <update id="updateProductStockById" parameterType="com.renking.xmall.Entity.Product">
+        update product set stock = #{stock}
+        where id = #{id}
+    </update>
+
+    <select id="selectAllProducts" resultType="com.renking.xmall.Entity.Product">
+        select id, name, description, category_id, price, stock, cover_img, status, sales_count, rating, created_at, updated_at from product
+        where 1=1
+        <if test="categoryId != null">
+            and category_id = #{categoryId}
+        </if>
+        <if test="maxPrice != null">
+            and price &lt;= #{maxPrice}
+        </if>
+        <if test="minPrice != null">
+            and price &gt;= #{minPrice}
+        </if>
+        limit #{page},#{pageSize}
+    </select>
+    <select id="selectProductsByName" resultType="com.renking.xmall.Entity.Product">
+        select id, name, description, category_id, price, stock, cover_img, status, sales_count, rating, created_at, updated_at from product
+        where name like concat('%',#{productName},'%')
+        limit #{page},#{pageSize}
+    </select>
+
+</mapper>

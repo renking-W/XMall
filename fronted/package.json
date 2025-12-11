@@ -8,12 +8,17 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "keywords": ["vue", "vite", "xmall"],
+  "keywords": [
+    "vue",
+    "vite",
+    "xmall"
+  ],
   "author": "",
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "vue": "^3.5.25"
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.2",

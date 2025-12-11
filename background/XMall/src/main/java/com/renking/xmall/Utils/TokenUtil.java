@@ -6,6 +6,7 @@ import com.renking.xmall.Config.TokenConfig;
 import com.renking.xmall.Entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -13,6 +14,8 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+@Slf4j
 
 @Component
 public class TokenUtil {
@@ -47,11 +50,19 @@ public class TokenUtil {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
+                    .setAllowedClockSkewSeconds(30)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (ExpiredJwtException e) {
+            log.error("{}:Token 已过期",token,e);
             throw new ServiceException("Token 无效或已经过期", StatusCode.TOKEN_INVALID);
+        } catch (SignatureException e) {
+            throw new ServiceException("Token 签名验证失败", StatusCode.TOKEN_INVALID);
+        } catch (MalformedJwtException e) {
+            throw new ServiceException("Token 格式错误", StatusCode.TOKEN_INVALID);
+        } catch (Exception e) {
+            throw new ServiceException("Token 解析失败", StatusCode.TOKEN_INVALID);
         }
     }
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.renking.xmall.Mapper.OrderItemMapper">
+    <insert id="insertOrderItems">
+        insert into order_item(order_number, product_id, product_name, product_price, quantity, total_price) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.orderNumber},#{item.productId},#{item.productName},#{item.productPrice},#{item.quantity},#{item.totalPrice})
+        </foreach>
+    </insert>
+    <select id="selectOrderItemsByOrderNumber" resultType="com.renking.xmall.Entity.Items">
+        select id, order_number, product_id, product_name, product_price, quantity from order_item
+        where order_number = #{orderNumber}
+    </select>
+    <select id="selectdOrderItemsByOrderNumbers" resultType="com.renking.xmall.Entity.Items">
+        select id, order_number, product_id, product_name, product_price, quantity from order_item
+        where order_number in
+        <foreach item="item" collection="orderNumbers" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

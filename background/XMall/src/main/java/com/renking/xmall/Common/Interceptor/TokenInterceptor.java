@@ -16,8 +16,12 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        //如果是预检请求则直接放行
+        if (request.getMethod().equals("OPTIONS")) {
+            return true;
+        }
         // 对于需要token的接口进行验证
-        String token = request.getHeader("Token");
+        String token = request.getHeader("token");
         if (TokenUtil.isTokenExpired(token)) {
             throw new ServiceException("Token 无效或已经过期", StatusCode.TOKEN_INVALID);
         }
